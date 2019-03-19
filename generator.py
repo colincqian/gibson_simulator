@@ -239,5 +239,4 @@ def main(T,superp,path,draw=False):
 
 if __name__ == "__main__":
     #test case
-    main(1,1,'model/Newfields/')
-
+    main(1,1,'model/Newfields/')main(1,1,'model/Allensville/',draw=True)
