@@ -4,8 +4,7 @@ Thanks to the gibson environment developed by StanfordVL, we are able to use tha
 
 ## Dataset
 ----
-You can down load the dataset from https://github.com/StanfordVL/GibsonEnv/blob/master/gibson/data/README.md. The folder ' model ' contains the 
-tiny dataset of gibson environment
+You can down load the dataset from https://github.com/StanfordVL/GibsonEnv/blob/master/gibson/data/README.md. The folder ' model ' should contain the folder ` <model name> `.  You should save like `  ./model/<model name>   (e.g. ./model/Allensville) ` 
 
 
 ## Map generation
