@@ -13,7 +13,7 @@ import generator
 BINARYMAP_SUPERPOSITION=int(sys.argv[1])# more superpostion means bettre removing the object indoor
 LINEMAP_SUPERPOSITION=int(sys.argv[2] ) #more super postion here means more accurate description of the map
 if len(sys.argv)==3:  #without setting the number of maps
-       limited_map=False              #go through all the model
+       limited_map=-1             #go through all the model
 else:
        limited_map=int(sys.argv[3] )     # set the number of maps
 
