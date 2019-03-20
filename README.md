@@ -52,7 +52,7 @@ The file `map.py`will serve to generate the map for customized number of maps. Y
   #### parameter explanation :
     argv[1]: The number of trajectory in each map.
     argv[2]: The number of steps need to take in each trajectory
-    argv[3](optional): Determining how many models is required to generate maps. The default would run through all the models
+    argv[3](optional): Determining how many models is required to go through. In default setting, it would run through all the models.
  
     
   
