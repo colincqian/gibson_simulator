@@ -6,7 +6,13 @@ Thanks to the gibson environment developed by StanfordVL, we are able to use tha
 ----
 You can down load the dataset from https://github.com/StanfordVL/GibsonEnv/blob/master/gibson/data/README.md. The folder ' model ' should contain the folder ` <model name> `.  You should save like `  ./model/<model name>   (e.g. ./model/Allensville) ` 
 
+## Package requirement
+----
+Please use the following command to install related package:
 
+       pip install meshcut ruamel.yaml 
+       
+ 
 ## Map generation
 -----
 The file `generator.py` can display and generate the maps of different floors for all the model. The map will by default saved under the folder of
