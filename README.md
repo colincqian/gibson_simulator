@@ -49,7 +49,7 @@ The file `map.py`will serve to generate the map for customized number of maps. Y
  image.You can use the following command:
  
 
-        pyhton rgb_generator_alpha.py 50 100                   
+        pyhton rgb_generator_alpha.py 50 100 1.2                   
   
   To generate the image with 50 trajectory for each model and 100 actions in each trajectory. The rgb images and depth images are saved
   under the folder named after the starting point of the trajectory in the ` ./model/<model name>/data ` folder with a ` information.txt `
@@ -58,7 +58,8 @@ The file `map.py`will serve to generate the map for customized number of maps. Y
   #### parameter explanation :
     argv[1]: The number of trajectory in each map.
     argv[2]: The number of steps need to take in each trajectory
-    argv[3](optional): Determining how many models is required to go through. In default setting, it would run through all the models.
+    argv[3]: the height of the robot
+    argv[4](optional): Determining how many models is required to go through. In default setting, it would run through all the models.
  
     
   
