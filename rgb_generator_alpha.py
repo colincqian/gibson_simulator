@@ -3,7 +3,7 @@ import numpy as np
 import random
 import meshcut
 import cv2
-#from gibson.envs.husky_env import  HuskyNavigateEnv
+from gibson.envs.husky_env import  HuskyNavigateEnv
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
@@ -11,6 +11,7 @@ import math
 import os
 import sys
 import shutil
+import pybullet as p
 
 '''
 version 1.3 using opencv to solve all the problems
@@ -115,7 +116,7 @@ def generate_random_point(pre_pos,orn,step,p_change_orientation=0.5):
         # print('delta_x',X-x)
         # print('delta_y',Y-y)
 
-        return (X,Y,Z),orn
+        return get_present_pos_with_robotheight((X,Y,Z)),orn
 
 
 
@@ -134,7 +135,7 @@ def is_in_room(bi_map,position):
     else:
         return False
 order=0
-def get_rgb(pos,orn,path):
+def get_rgb(path):
     '''
 
     :param pos: (x,y,z) the postion in the model
@@ -145,13 +146,14 @@ def get_rgb(pos,orn,path):
     # (x,y,z)=orn
     # (qw, qx, qy, qz) = euler_to_quaternion(x, y, z)
     # env.robot.reset_new_pose(pos,[qw,qx,qy,qz])
-    # action=0
-    # global order
-    # obs, _, _, _ = env.step(action)
-    # plt.imsave(path+'rgb/'+order+'.png', obs['rgb_filled'])
-    # cv2.imwrite()
-    # plt.imsave(path + 'depth/' + order + '.png', obs['depth'])
-    # order+=1
+    action=0
+    global order
+    obs, _, _, _ = env.step(action)
+    rgb_image=obs['rgb_filled']#cv2.resize(obs['rgb_filled'],(56,56))
+    depth_image=obs['depth']#cv2.resize(obs['depth'],(56,56))
+    plt.imsave(path+'rgb/'+str(order)+'.png', rgb_image)
+    cv2.imwrite(path + 'depth/' + str(order) + '.png', depth_image)
+    order+=1
 
 def load_obj(fn):
     '''
@@ -192,15 +194,120 @@ def not_collide(bi_map,start,end):
     return True
 
 
-def documenting(path,pos,orn):
+def pybullet_collision_checking(pos_new,orn_new):
+    '''
+
+    get contact object id and return boolean
+    True: not collide
+    False: collision happens
+    '''
+    pos_pre=env.robot.get_position()
+    orn_pre=env.robot.get_orientation()
+
+    (x,y,z)=orn_new
+    (qw, qx, qy, qz) = euler_to_quaternion(x, y, z)
+    env.robot.reset_new_pose(pos_new, [qw, qx, qy, qz])
+
+
+    obj_id=env.robot.robot_ids
+    id=p.getContactPoints(obj_id[0])
+    #print('pos:',pos,'objectID:',id)
+    if len(id)>=20:
+        #collision happened
+        #go back to previuos state
+        env.robot.reset_new_pose(pos_pre, orn_pre)
+        return False
+
+    return True
+
+
+
+
+def documenting(path,orn):
     '''
 
     saving the postion and orientation in the specific path
     '''
-
+    pos=env.robot.get_position()
     with open(path+'information.txt','a') as f:
         f.write(str((pos[0],pos[1],orn[2]))+'\n')
 
+def modify_config_file(model_name,config_file):
+    import ruamel.yaml
+    yaml = ruamel.yaml.YAML()
+    with open(config_file) as fp:
+        data=yaml.load(fp)
+        data['model_id']=model_name
+
+    with open(config_file,'w') as f:
+        yaml.dump(data,f)
+
+def bi_map_collision_checking(bi_map,start_x,start_y,end_x,end_y):
+    '''
+    collision checking method based on the bimap
+    Another method is the pybullet collsion check
+    :return:
+    '''
+    in_bound = all([bool(end_x < bi_map.shape[1]), bool(end_x >= 0), bool(end_y < bi_map.shape[0]), bool(end_y >= 0)])
+    return in_bound and is_in_room(bi_map,(end_x,end_y)) and not_collide(bi_map,(start_x,start_y),(end_x,end_y))
+
+def get_present_pos_with_robotheight(pos):
+    '''
+
+    :param coord: (x,y,z) the coord in real world
+    :return: the new adjusted pos
+    '''
+    _, _, _, hit_position, _ = p.rayTest(pos, [pos[0], pos[1], pos[2] - 2])[0]
+    return (hit_position[0],hit_position[1],hit_position[2]+ROBOT_HEIGHT)
+
+
+
+def pybullet_path_checking(start,end):
+    '''
+
+    :param start: starting coordinate in real world
+    :return: True:no collision with object in path
+             False: collide with object in path
+    '''
+    pos=end
+    dz=2
+    dense_of_ray=3#describ how dense the ray for collision detection
+    _,_,_,hit_position,_=p.rayTest(start,[start[0],start[1],start[2]-dz])[0]
+    height=start[2]-hit_position[2]
+    start_pos_array=[ [start[0],start[1],hit_position[2]+i*height/dense_of_ray]  for i in range(1,dense_of_ray+1)]
+
+    _, _, _, end_hit_position, _ = p.rayTest(pos, [pos[0], pos[1], pos[2] - dz])[0]
+    end_height=pos[2]-end_hit_position[2]
+    end_pos_array=[[pos[0],pos[1],end_hit_position[2]+i*end_height/dense_of_ray]   for i in range(1,dense_of_ray+1)]
+
+    result=p.rayTestBatch(start_pos_array,end_pos_array)
+    for r in result:
+        if r[1]==-1:
+            #no collision
+            continue
+        else:
+            return False
+
+    return True
+
+    
+
+
+
+
+def comprehensive_collision_checking(bi_map,pos_new,orn_new,start_x,start_y,end_x,end_y):
+    condition1=bi_map_collision_checking(bi_map,start_x,start_y,end_x,end_y)
+    condition2=pybullet_collision_checking(pos_new,orn_new)
+    if condition1 and condition2:
+        return True
+    if not condition1 and condition2:
+        bi_map[end_y,end_x]=1 #change the status ot that point to be a reachable one
+        return True
+    if condition1 and not condition2:
+        bi_map[end_y,end_x]=0
+        return False
+    if not condition1 and not condition2:
+        return False
 
 
 
@@ -216,38 +323,19 @@ def trajectory_generator(start,orn,bi_map,map_para,path,count=1):
     start_x,start_y=transform_real_to_cv(start[0],start[1],map_para)
     pos_new,orn_new=generate_random_point(start,orn,step)
     end_x,end_y= transform_real_to_cv(pos_new[0], pos_new[1], map_para)
-    in_bound= all([bool(end_x < bi_map.shape[1]) , bool(end_x >= 0) ,bool(end_y < bi_map.shape[0]) , bool(end_y >=0)])
-
-    if in_bound and is_in_room(bi_map,(end_x,end_y)) and not_collide(bi_map,(start_x,start_y),(end_x,end_y)):
-        get_rgb(pos_new,orn_new,path)                   #get rgb of that position
-        cv2.line(bi_map,(start_x,start_y),(end_x,end_y),150) #plot trajectory
-        documenting(path,pos_new,orn_new)               #save position and orientation
-        return pos_new,orn_new
-    elif count==30:                                     #prevent it from too many recursion
+    if pybullet_path_checking(start,pos_new) and comprehensive_collision_checking(bi_map,pos_new,orn_new,start_x,start_y,end_x,end_y):
+        get_rgb(path)                   #get rgb of that position
+        documenting(path,orn_new)               #save position and orientation
+        cv2.line(bi_map, (start_x, start_y), (end_x, end_y), 255)
+        return tuple(env.robot.get_position()),orn_new
+    elif count==300:                                     #prevent it from too many recursion
         return 0,0
     else:
         return trajectory_generator(start,orn, bi_map, map_para,path,count=count+1)
 
-# def is_indoor(coord, image):
-#     x0,y0=coord
-#     for y in range(image.shape[1]):
-#         if image[x0,y]==0:   #row check
-#             break            #meet black break
-#     else:
-#         # all white
-#         return False
-#
-#     for x in range(image.shape[0]):
-#         if image[x,y0]==0:    #column check
-#             break
-#     else:
-#         return False
-#
-#     return True
 
 
-
-def generate_indoor_starting_point(image,number):
+def generate_indoor_starting_point(image,number,z):
 
     '''
     This function generate a series of starting point according to the map
@@ -255,64 +343,44 @@ def generate_indoor_starting_point(image,number):
     :param number: number of the starting points
     :return: a list of tuples representing the starting point(in the opencv coordinate)
     '''
-    def is_in_door(coord,image):
-        x0,y0=coord
-        if image[y0,x0]==0:
-            return False
-        for x in range(x0,image.shape[1]):
-            if image[y0,x]==0:
-                break
-        else:
-            return False
+    row,col =np.nonzero(image)
+    #assert(number<len(row))
+    orn = (3.14, 0, random.uniform(0, 2 * np.pi))
+    points={(x,y) for y,x in zip(row,col) if pybullet_collision_checking((x,y,z),orn)} #consider the different coordinate between numpy and opencv
 
-        for x in range(0,x0):
-            if image[y0,x]==0:
-                break
-        else:
-            return False
+    #make an additional judgement of whether the starting point is indoor
+    if number >= len(points):
+        print('not enough space for starting point!')
+        yield from points
+    else:
+        while(True):
+            sample_points=random.sample(points,1)
+            points.remove(sample_points
+                          )
 
-        for y in range(y0,image.shape[0]):
-            if image[y,x0]==0:
-                break
-        else:
-            return False
+            yield from sample_points
 
-
-        for y in range(y0):
-            if image[y,x0]==0:
-                break
-        else:
-            return False
-
-        return True
-    output=[]
-    while (len(output)!=number):
-        x=np.random.randint(image.shape[1])
-        y=np.random.randint(image.shape[0])
-        if is_in_door((x,y),image):
-            output.append((x,y))
-    return output
-
-    #
-    # row,col =np.nonzero(image)
-    # assert(number<len(row))
-    #
-    # points={(x,y) for y,x in zip(row,col)   #consider the different coordinate between numpy and opencv
-    #
-    # #make an additional judgement of whether the starting point is indoor
-    # sample_points=random.sample(points,number)
-
-    return sample_points
-
-if __name__ == "__main__":
-    # Here is the test value
-    # NUMBER_OF_STARTINGPOINT=200   #number of trajectory
-    # NUMBER_OF_ACTION=300          #number of steps taken
+if __name__=="__main__":
     NUMBER_OF_STARTINGPOINT=int(sys.argv[1])#number of trajectory
     NUMBER_OF_ACTION=int(sys.argv[2]  )     #number of steps taken
+    ROBOT_HEIGHT=float(sys.argv[3] )        #the height of the robot
+    if len(sys.argv) == 4:  # without setting the number of maps
+        LIMITED_MODEL = -1  # go through all the model
+    else:
+        LIMITED_MODEL = int(sys.argv[4])  # set the number of maps
+
     for folder in os.listdir(os.getcwd()):  #e.g. allensville
         if os.path.isfile(folder):
             continue
+        if not os.path.exists('./'+folder+'/floor0'):
+            continue
+        if LIMITED_MODEL==0:
+            break
+	
+        modify_config_file(folder,"husky_navigate_enjoy.yaml")   #modify the model id of config file
+        env = HuskyNavigateEnv(config = 'husky_navigate_enjoy.yaml')
+        env.reset()
+	
         for floor in os.listdir('./'+folder):    #e.g. floor1
             if not os.path.exists('./'+folder+'/'+ floor+'/bimap.png'):
                 continue
@@ -326,32 +394,32 @@ if __name__ == "__main__":
                         DATA.append(eval(line))   #max_point, min_point,resolution,z
                 print("map parameters loaded!!")
 
-                starting_point=generate_indoor_starting_point(bimap,NUMBER_OF_STARTINGPOINT)
-                print('starting point loaded!!')
+
 
                 max_point,min_point,resolution,z_position=DATA
                 print('max',max_point,'min:',min_point,'resolution:',resolution,'z_postion:',z_position)
                 map_para=[max_point,min_point,resolution]
 
-                # env = HuskyNavigateEnv(config = 'husky_navigate_enjoy.yaml')
-                # env.reset()
-
                 if os.path.isdir(PATH + 'data'):
                     shutil.rmtree(PATH + 'data')
-
+                print('starting point loaded!!')
                 os.mkdir(PATH + 'data')
-
-                for (x,y) in starting_point:
+                number_of_trajectory=NUMBER_OF_STARTINGPOINT
+                for (x,y) in generate_indoor_starting_point(bimap,NUMBER_OF_STARTINGPOINT,z_position):
+                    if number_of_trajectory==0:
+                        #make sure that it create enough trajectory
+                        break
+                    order=0
                     (x,y)=transform_cv_to_real(x,y,map_para) #transform into real coordinate
-
-
 
                     os.mkdir(PATH+'data/'+str((x,y)))
                     RGB_PATH=PATH+'data/'+str((x,y))+'/'    #create the trajectory dir
                     os.mkdir(RGB_PATH+'rgb')                                  #create rgb dir
                     os.mkdir(RGB_PATH + 'depth')
 
-                    pos=(x,y,z_position)
+
+
+                    pos=get_present_pos_with_robotheight((x,y,z_position))
                     orn=(3.14,0,random.uniform(0, 2 * np.pi))
 
                     for n in range(NUMBER_OF_ACTION):
@@ -359,7 +427,15 @@ if __name__ == "__main__":
                         if pos==0:   #abandon the trajectory which trap the robot
                             shutil.rmtree(PATH+'data/'+str((x,y)))
                             break
-                cv2.imwrite(PATH+'tra_bin.png',bimap)
+                    else:
+                        number_of_trajectory-=1
+                #cv2.imwrite(PATH+'tra_bin.png',bimap)
+                cv2.imwrite(PATH+'bi_map_adj.png',bimap)
+        LIMITED_MODEL-=1
+        env.close()
+	
+    print('done')
+
 
 
 
