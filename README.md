@@ -10,7 +10,7 @@ You can down load the dataset from https://github.com/StanfordVL/GibsonEnv/blob/
 ----
 Please use the following command to install related package:
 
-       pip install meshcut ruamel.yaml 
+       pip install -r requirement.txt
        
  
 ## Map generation
