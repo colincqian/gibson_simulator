@@ -19,7 +19,7 @@ def display_data(file):
         features = result.features.feature
 
         # binary map: 0 for free space, 255 for walls
-        bi_map = decode_image(features['map'].bytes_list.value[0])
+        bi_map = decode_image(features['map_wall'].bytes_list.value[0])
 
         # true states
         # (x, y, theta). x,y: pixel coordinates; theta: radians
