@@ -29,8 +29,11 @@ The file `map.py`will serve to generate the map for customized number of maps. Y
     
  To generate the map for 20 models with 1 superposition of binary map and 3 superpostion of raw map.
  You will find 3 maps in your `  <model name>/floor<i>  ` folder and a `  map_para.txt    `file containing the map parameters for future use.
- The map generated for each floor should look like this:
- ![](https://github.com/colincqian/gibson_simulator/blob/master/model/Allensville/floor0/bimap.png?raw=true "binary map")
+ The map generated for each floor should look like this:<br/>
+ 
+ 
+ 
+ ![alt text](https://github.com/colincqian/gibson_simulator/blob/master/model/Allensville/floor0/bimap.png?raw=true "binary map")
  
  
  #### parameter explanation :
