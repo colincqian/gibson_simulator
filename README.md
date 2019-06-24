@@ -61,8 +61,14 @@ The file `map.py`will serve to generate the map for customized number of maps. Y
     argv[3]: the height of the robot
     argv[4](optional): Determining how many models is required to go through. In default setting, it would run through all the models.
  
-    
-  
+## Transform the data
+----
+To transform the data into tfrecords for training and validation, you have to run the transform_to_TFRecord.py by the following command:
+
+        python transform_to_TFRecord.py
+        
+The training and validation data will be saved in folder tfdataset.
+
 
     
 
