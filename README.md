@@ -69,8 +69,15 @@ To transform the data into tfrecords for training and validation, you have to ru
         
 The training and validation data will be saved in folder tfdataset.
 
+## Training 
+----
 
-    
+Training requires the training and validation datesets to be downloaded into the ./data/ folder. The configuration of training process is in the configuration file in .pfnet-master/configs/ folder. Note that training requires significant resources, and it may take several hours or days depending on the hardware.You can run the training process by:
+
+        cd pfnet-master
+        python train.py -c ./configs/train.conf --obsmode rgb  --mapmode wall
+        
+
 
 
 
