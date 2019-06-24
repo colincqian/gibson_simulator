@@ -59,12 +59,15 @@ The file `map.py`will serve to generate the map for customized number of maps. Y
   To generate the image with 50 trajectory for each model and 100 actions in each trajectory. The rgb images and depth images are saved
   under the folder named after the starting point of the trajectory in the ` ./model/<model name>/data ` folder with a ` information.txt `
   file documenting the state information. 
-  
   #### parameter explanation :
     argv[1]: The number of trajectory in each map.
     argv[2]: The number of steps need to take in each trajectory
     argv[3]: the height of the robot
     argv[4](optional): Determining how many models is required to go through. In default setting, it would run through all the models.
+The rgb and depth image saved under the directory ` ./model/<model name>/data/<trajectory starting point>/rgb(depth) `, which should look like: <br/>
+
+ ![alt text](https://github.com/colincqian/gibson_simulator/blob/master/model/Allensville/floor0/data/(-0.3052697519374036%2C%206.626248501422827)/rgb/0.png?raw=true "rgb")
+ 
  
 ## Transform the data
 ----
