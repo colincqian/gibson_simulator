@@ -30,6 +30,8 @@ The file `map.py`will serve to generate the map for customized number of maps. Y
  To generate the map for 20 models with 1 superposition of binary map and 3 superpostion of raw map.
  You will find 3 maps in your `  <model name>/floor<i>  ` folder and a `  map_para.txt    `file containing the map parameters for future use.
  
+ ![Alt text](D:\github\bimap.png?raw=true "Title")
+ 
  
  #### parameter explanation :
     argv[1]: The number of superposition for binary map,more superposition means better remove the object indoor
@@ -76,6 +78,9 @@ Training requires the training and validation datesets to be downloaded into the
 
         cd pfnet-master
         python train.py -c ./configs/train.conf --obsmode rgb  --mapmode wall
+        
+        
+
         
 
 
