@@ -4,7 +4,7 @@ Thanks to the gibson environment developed by StanfordVL, we are able to use tha
 
 ## Dataset
 ----
-You can down load the dataset from https://github.com/StanfordVL/GibsonEnv/blob/master/gibson/data/README.md. The folder ' model ' should contain the folder ` <model name> `.  You should save like `  ./model/<model name>   (e.g. ./model/Allensville) ` 
+You can down load the dataset from https://github.com/StanfordVL/GibsonEnv/blob/master/gibson/data/README.md. The folder ' model ' should contain the all the model you download from the link.  You should save like `  ./model/<model name>   (e.g. ./model/Allensville) ` 
 
 ## Package requirement
 ----
