@@ -79,7 +79,8 @@ def display_data(file):
         plt.imshow(map_wall.transpose())
 
         plt.figure()
-        plt.imshow(rgb[0])
+        # Rescale images to 0..1. Inverse of pfnet.preprocess.scale_observation().
+        plt.imshow((rgb[0]+1)/3)
 
         plt.show()
 
