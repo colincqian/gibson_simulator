@@ -77,6 +77,15 @@ To transform the data into tfrecords for training and validation, you have to ru
         
 The training and validation data will be saved in folder tfdataset.
 
+
+## Display the data
+---
+To display the data stored in ` ./pfnet/data `, run display_data.py by the following command:
+
+       python  display_data.py ./pfnet/data/<name of tfrecord>
+       
+   
+ 
 ## Training 
 ----
 
